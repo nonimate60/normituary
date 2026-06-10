@@ -1,0 +1,59 @@
+import { useState } from 'react';
+import { jget, fmtDate, getApi } from '../api.js';
+
+export default function Hero({ stats, onFeatured, searchMsg, setSearchMsg }) {
+  const [value, setValue] = useState('');
+
+  async function search() {
+    const raw = value.trim();
+    const id = Number(raw);
+    if (raw === '' || !Number.isInteger(id) || id < 0 || id > 9999) {
+      setSearchMsg('enter a token id between 0 and 9999');
+      return;
+    }
+    setSearchMsg(`searching for normie #${id}…`);
+    try {
+      const info = await jget(`${getApi()}/history/burned/${id}`);
+      const commitId = info.commitId ?? info.commit_id;
+      let died = '—';
+      try {
+        const commit = await jget(`${getApi()}/history/burns/${commitId}`);
+        died = fmtDate(commit.timestamp);
+      } catch (_) { /* */ }
+      const token = {
+        tokenId: id,
+        pixelCount: info.pixelCount ?? info.pixel_count ?? '—',
+        commitId, died,
+      };
+      setSearchMsg(`normie #${id} rests here — burned ${died}`);
+      onFeatured(token, true);
+    } catch (err) {
+      setSearchMsg(err.status === 404
+        ? `normie #${id} is not among the departed — still alive, unminted, or unrevealed`
+        : `search failed (${err.message}) — try again`);
+    }
+  }
+
+  return (
+    <header>
+      <h1>normituary</h1>
+      <p className="sub">in memory of the burned Normies &mdash; on-chain, forever</p>
+      <div className="stats">
+        <div className="stat"><b>{stats.dead}</b>departed</div>
+        <div className="stat"><b>{stats.alive}</b>remain</div>
+        <div className="stat"><b>{stats.points}</b>points bequeathed</div>
+      </div>
+      <div className="search-row">
+        <input
+          type="number" min="0" max="9999"
+          placeholder="search a burned normie by # (0–9999)"
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') search(); }}
+        />
+        <button onClick={search}>find</button>
+      </div>
+      <div className="search-msg">{searchMsg}</div>
+    </header>
+  );
+}
