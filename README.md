@@ -28,19 +28,31 @@ you can mint.
 ## Repo layout
 
 ```
-web/        index.html          — the site (single file, no build step)
-contracts/  Normituary.sol      — ERC-721 memorial, EIP-712 death vouchers
-infra/      normies-proxy.conf  — nginx caching proxy for api.normies.art
-            setup-proxy.sh      — idempotent VPS installer
+web/        Vite + React app (RainbowKit + wagmi + WalletConnect)
+              src/                — components, wagmi config, API helpers
+              public/fonts/       — Robotastic.woff2
+              index.html          — Vite entry
+contracts/  Normituary.sol        — ERC-721 memorial, EIP-712 death vouchers
+infra/      normies-proxy.conf    — nginx caching proxy for api.normies.art
+            setup-proxy.sh        — idempotent VPS installer
 ```
 
 ## Running the site
 
-No build step. Open `web/index.html` in a browser, or serve it statically:
+```bash
+cd web
+cp .env.example .env   # set VITE_WALLETCONNECT_PROJECT_ID from cloud.reown.com
+npm install
+npm run dev            # http://localhost:3000
+```
+
+Static deploy:
 
 ```bash
-cd web && python3 -m http.server 3000
+cd web && npm run build   # outputs to web/dist/
 ```
+
+`Staticfile` already points at `web/dist`.
 
 The site auto-detects its data source: it tries the VPS cache proxy first and
 falls back to `https://api.normies.art` directly. The status line above the
