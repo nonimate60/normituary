@@ -4,21 +4,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>normituary</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
+  @font-face{
+    font-family:'Robotastic';
+    src:url('fonts/Robotastic.woff2') format('woff2');
+    font-weight:normal;
+    font-style:normal;
+    font-display:swap;
+  }
   /* ============================================================
      NORMIES IDENTITY: only the two on-chain grays.
      pixel on = #48494b · pixel off = #e3e5e4
-     Font: --font is a variable — swap in the exact normies.art
-     font once confirmed via devtools.
+     --font       → body (Courier New, monospace)
+     --font-title → titles (Robotastic, local woff2)
      ============================================================ */
   :root{
     --ink:#48494b;
     --paper:#e3e5e4;
     --ink-soft:rgba(72,73,75,.55);
     --ink-faint:rgba(72,73,75,.22);
-    --font:'Space Mono',ui-monospace,monospace;
+    --font:'Courier New',ui-monospace,monospace;
+    --font-title:'Robotastic',var(--font);
   }
   *{margin:0;padding:0;box-sizing:border-box}
   html{scroll-behavior:smooth}
@@ -32,7 +38,7 @@
 
   /* ---------- nav ---------- */
   nav{display:flex;justify-content:space-between;align-items:center;padding:24px 0;gap:16px;flex-wrap:wrap}
-  nav .brand{font-weight:700;letter-spacing:.02em}
+  nav .brand{font-family:var(--font-title);font-weight:700;letter-spacing:.02em}
   nav .links{display:flex;gap:24px;font-size:13px;align-items:center}
   nav .links a{text-decoration:none;border-bottom:1px solid transparent}
   nav .links a:hover{border-bottom-color:var(--ink)}
@@ -47,7 +53,7 @@
 
   /* ---------- hero ---------- */
   header{padding:60px 0 48px;text-align:center}
-  h1{font-size:clamp(28px,5vw,44px);font-weight:700;letter-spacing:.01em}
+  h1{font-family:var(--font-title);font-size:clamp(28px,5vw,44px);font-weight:700;letter-spacing:.01em}
   .sub{margin-top:10px;color:var(--ink-soft);font-size:15px}
   .stats{margin-top:40px;display:inline-flex;border:1px solid var(--ink-faint)}
   .stat{padding:14px 32px;font-size:12px;color:var(--ink-soft)}
@@ -101,7 +107,7 @@
     border-top:16px solid var(--ink);border-left:16px solid transparent;
     opacity:.85;z-index:2;
   }
-  .cell h3{font-size:13px;font-weight:700;margin-top:12px}
+  .cell h3{font-family:var(--font-title);font-size:13px;font-weight:700;margin-top:12px}
   .cell .dates{font-size:11px;color:var(--ink-soft);margin-top:3px}
   .cell .pix{font-size:10px;color:var(--ink-soft);margin-top:2px;letter-spacing:.04em}
 
@@ -169,7 +175,7 @@
     width:100%;max-width:216px;aspect-ratio:1;image-rendering:pixelated;display:block;
   }
   .memorial .info{padding:36px 40px 40px}
-  .memorial h2{font-size:20px;font-weight:700}
+  .memorial h2{font-family:var(--font-title);font-size:20px;font-weight:700}
   .memorial .lived{margin-top:6px;font-size:13px;color:var(--ink-soft)}
   .memorial p{margin-top:18px;font-size:13px;color:var(--ink-soft);max-width:52ch}
   .phases{margin-top:26px;border:1px solid var(--ink-faint);font-size:12px}
