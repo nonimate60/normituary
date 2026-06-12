@@ -161,6 +161,12 @@ h1{font-family:var(--font-title);font-size:clamp(28px,5vw,44px);font-weight:700;
 .memorial .portrait-side img,.memorial .portrait-side canvas{
   width:100%;max-width:216px;aspect-ratio:1;image-rendering:pixelated;display:block;
 }
+.memorial .portrait-side .memorial-stone,
+.memorial .portrait-side .memorial-stone svg,
+.memorial .portrait-side .memorial-stone-placeholder{
+  width:100%;max-width:216px;aspect-ratio:1;display:block;
+}
+.memorial .portrait-side .memorial-stone-placeholder{background:var(--ink-faint)}
 .memorial .info{padding:36px 40px 40px}
 .memorial h2{font-family:var(--font-title);font-size:20px;font-weight:700}
 .memorial .lived{margin-top:6px;font-size:13px;color:var(--ink-soft)}
