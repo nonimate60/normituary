@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { jget, fmtDate, getApi } from '../api.js';
+import Logo from './Logo.jsx';
 
 export default function Hero({ stats, onFeatured, searchMsg, setSearchMsg }) {
   const [value, setValue] = useState('');
@@ -54,16 +55,19 @@ export default function Hero({ stats, onFeatured, searchMsg, setSearchMsg }) {
         <button onClick={search}>find</button>
       </div>
       <div className="search-msg">{searchMsg}</div>
-      <div className="intro-copy">
-        <p>When a Normie is burned, it leaves the collection. Its portrait,
-           however, is written into SSTORE2 and remains on-chain forever.
-           normituary preserves that record.</p>
-        <p>Every departed Normie enters a 30-day mourning period. During that
-           window, the original burner may claim a free Remembrance: a
-           certificate of passage, minted in their name. After 30 days, the
-           Remembrance opens to anyone for 0.01 ETH.</p>
-        <p>For the first 30 days after launch, all previously burned Normies
-           are in mourning.</p>
+      <div className="intro">
+        <Logo className="intro-logo" />
+        <div className="intro-copy">
+          <p>When a Normie is burned, it leaves the collection. Its portrait,
+             however, is written into SSTORE2 and remains on-chain forever.
+             normituary preserves that record.</p>
+          <p>Every departed Normie enters a 30-day mourning period. During that
+             window, the original burner may claim a free Remembrance: a
+             certificate of passage, minted in their name. After 30 days, the
+             Remembrance opens to anyone for 0.01 ETH.</p>
+          <p>For the first 30 days after launch, all previously burned Normies
+             are in mourning.</p>
+        </div>
       </div>
     </header>
   );
