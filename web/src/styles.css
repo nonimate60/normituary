@@ -113,7 +113,7 @@ h1{font-family:var(--font-title);font-size:clamp(28px,5vw,44px);font-weight:700;
   display:flex;align-items:stretch;gap:24px;text-align:left;
 }
 .intro-logo-wrap{
-  flex:none;width:120px;display:flex;align-items:center;justify-content:center;
+  flex:none;width:160px;display:flex;align-items:center;justify-content:center;
 }
 .intro-logo{
   width:100%;height:auto;image-rendering:pixelated;display:block;

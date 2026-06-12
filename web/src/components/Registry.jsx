@@ -18,7 +18,7 @@ export default function Registry({ status, page, tokens, exhausted, loading, onP
           <Tombstone
             key={`${t.commitId}-${t.tokenId}`}
             token={t}
-            onClick={() => onSelect(t, false)}
+            onClick={() => onSelect(t, true)}
           />
         ))}
       </section>
