@@ -1,21 +1,10 @@
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
-const API_CANDIDATES = [`${BACKEND_URL}/api`];
+const API = `${BACKEND_URL}/api`;
 
 export const PAGE_SIZE = 12;
 export const COMMIT_BATCH = 20;
 
-let API = API_CANDIDATES[API_CANDIDATES.length - 1];
-
 export const getApi = () => API;
-
-export async function pickApi() {
-  for (const base of API_CANDIDATES) {
-    try {
-      const r = await fetch(base + '/history/stats', { signal: AbortSignal.timeout(4000) });
-      if (r.ok) { API = base; return; }
-    } catch (_) { /* next */ }
-  }
-}
 
 export const fmtDate = ts => new Date(Number(ts) * 1000)
   .toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
