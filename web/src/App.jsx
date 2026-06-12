@@ -6,6 +6,7 @@ import Hero from './components/Hero.jsx';
 import MineSection from './components/MineSection.jsx';
 import Registry from './components/Registry.jsx';
 import Memorial from './components/Memorial.jsx';
+import Bats from './components/Bats.jsx';
 
 import { jget, expandCommit, getApi, fmtNum, PAGE_SIZE, COMMIT_BATCH } from './api.js';
 import { usePayRespects } from './hooks/usePayRespects.js';
@@ -173,6 +174,7 @@ export default function App() {
 
   return (
     <div className="wrap">
+      <Bats />
       <Nav />
       <Hero
         stats={stats}

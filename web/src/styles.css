@@ -15,13 +15,51 @@
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
+
+/* ---------- pixel-cross cursor (logo ink) ---------- */
+/* 16x16 latin cross, #48494b, hotspot at the bar intersection */
+html,body,a,button,input,textarea,select{
+  cursor:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' shape-rendering='crispEdges'><g fill='%2348494b'><rect x='7' y='1' width='2' height='14'/><rect x='4' y='4' width='8' height='2'/></g></svg>") 8 5, crosshair;
+}
+
 body{
   background:var(--paper);color:var(--ink);
   font-family:var(--font);font-size:14px;line-height:1.7;
   -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
 }
-.wrap{max-width:960px;margin:0 auto;padding:0 24px}
+.wrap{max-width:960px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
 a{color:var(--ink)}
+
+/* ---------- bats overlay ---------- */
+.bats-layer{
+  position:fixed;inset:0;pointer-events:none;
+  z-index:5;
+}
+.bat{
+  position:absolute;left:0;top:0;
+  width:28px;height:16px;
+  background:none;border:0;padding:0;
+  background-repeat:no-repeat;background-size:contain;background-position:center;
+  pointer-events:auto;cursor:inherit;
+  image-rendering:pixelated;
+  opacity:.55;
+  will-change:transform;
+}
+.bat:hover{opacity:.85}
+.bat.dead{opacity:.4;transition:opacity .25s}
+
+/* ---------- audio player button ---------- */
+.audio-btn{
+  font-family:var(--font);font-size:12px;font-weight:700;
+  background:none;color:var(--ink);border:1px solid var(--ink);
+  padding:7px 12px;letter-spacing:.04em;
+  display:inline-flex;align-items:center;gap:8px;
+  transition:background .25s,color .25s;
+}
+.audio-btn:hover{background:var(--ink);color:var(--paper)}
+.audio-btn.playing{background:var(--ink);color:var(--paper)}
+.audio-btn .audio-label{font-size:11px}
 
 /* ---------- nav ---------- */
 nav{display:flex;justify-content:space-between;align-items:center;padding:24px 0;gap:16px;flex-wrap:wrap}
