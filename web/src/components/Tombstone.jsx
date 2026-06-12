@@ -1,6 +1,10 @@
+import { useAccount } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { Portrait } from '../portraits.jsx';
 
 export default function Tombstone({ token, onClick, selectable, selected, onRespect }) {
+  const { isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
   const cls = `cell${selectable ? ' selectable' : ''}${selected ? ' selected' : ''}`;
   return (
     <div className={cls} onClick={onClick}>
@@ -15,7 +19,11 @@ export default function Tombstone({ token, onClick, selectable, selected, onResp
       {selectable && (
         <button
           className="respect-btn"
-          onClick={e => { e.stopPropagation(); onRespect(); }}
+          onClick={e => {
+            e.stopPropagation();
+            if (!isConnected) { openConnectModal?.(); return; }
+            onRespect();
+          }}
         >
           pay respects
         </button>
