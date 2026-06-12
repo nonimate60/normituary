@@ -111,34 +111,6 @@ def burned_portrait_datauri(token_id):
 # SVG renderer — frozen design, LCG-identical to the site generator
 # ----------------------------------------------------------------------
 INK, PAPER = "#48494b", "#e3e5e4"
-GLYPHS = {
-    "+": ["00100","00100","11111","00100","00100","00100","00100"],
-    "-": ["00000","00000","00000","11111","00000","00000","00000"],
-    "0": ["01110","10001","10011","10101","11001","10001","01110"],
-    "1": ["00100","01100","00100","00100","00100","00100","01110"],
-    "2": ["01110","10001","00001","00010","00100","01000","11111"],
-    "3": ["11111","00010","00100","00010","00001","10001","01110"],
-    "4": ["00010","00110","01010","10010","11111","00010","00010"],
-    "5": ["11111","10000","11110","00001","00001","10001","01110"],
-    "6": ["00110","01000","10000","11110","10001","10001","01110"],
-    "7": ["11111","00001","00010","00100","01000","01000","01000"],
-    "8": ["01110","10001","10001","01110","10001","10001","01110"],
-    "9": ["01110","10001","10001","01111","00001","00010","01100"],
-}
-
-def pixel_text(s, cx, top, p):
-    cw = 6 * p
-    x0 = cx - (len(s) * cw - p) / 2
-    out = []
-    for ch in s:
-        g = GLYPHS.get(ch)
-        if g:
-            for r in range(7):
-                for c in range(5):
-                    if g[r][c] == "1":
-                        out.append(f'<rect x="{x0 + c*p}" y="{top + r*p}" width="{p}" height="{p}"/>')
-        x0 += cw
-    return f'<g fill="{INK}" shape-rendering="crispEdges">{"".join(out)}</g>'
 
 def arch_pts():
     return [(800,880),(800,320),(790,320),(790,262),(776,262),(776,216),
@@ -188,7 +160,7 @@ def face_fallback(seed):
     on += [(19,24),(20,24)] + [(x,29) for x in range(16,24)]
     return on
 
-def memorial_svg(token_id, date_str, portrait_href=None):
+def memorial_svg(token_id, portrait_href=None):
     PX, POX, POY = 360, 320, 178
     if portrait_href:
         portrait = (f'<image href="{portrait_href}" x="{POX}" y="{POY}" width="{PX}" height="{PX}" '
@@ -198,7 +170,6 @@ def memorial_svg(token_id, date_str, portrait_href=None):
         rects = "".join(f'<rect x="{POX+x*s:.1f}" y="{POY+y*s:.1f}" width="{s:.1f}" height="{s:.1f}"/>'
                         for x, y in face_fallback(token_id))
         portrait = f'<g fill="{INK}" shape-rendering="crispEdges">{rects}</g>'
-    id_str = "+" + str(token_id).zfill(4)
     return f'''<svg viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
   <rect width="1000" height="1000" fill="{PAPER}"/>
   <rect x="70" y="952" width="860" height="8" fill="{INK}" fill-opacity=".25"/>
@@ -214,8 +185,6 @@ def memorial_svg(token_id, date_str, portrait_href=None):
   <rect x="172" y="868" width="656" height="34" fill="{PAPER}" stroke="{INK}" stroke-width="12" shape-rendering="crispEdges"/>
   <rect x="140" y="896" width="720" height="64" fill="{PAPER}" stroke="{INK}" stroke-width="14" shape-rendering="crispEdges"/>
   {portrait}
-  {pixel_text(id_str, 500, 600, 12)}
-  {pixel_text(date_str, 500, 736, 8)}
 </svg>'''
 
 # ----------------------------------------------------------------------
@@ -247,10 +216,8 @@ def metadata(token_id):
 @app.get("/memorial/<int:token_id>/image.svg")
 def image(token_id):
     if not 0 <= token_id <= 9999: abort(404)
-    rec  = burn_record(token_id)
-    date = time.strftime("%Y-%m-%d", time.gmtime(rec["timestamp"]))
     href = burned_portrait_datauri(token_id)  # retorna None se falhar
-    return Response(memorial_svg(token_id, date, href), mimetype="image/svg+xml",
+    return Response(memorial_svg(token_id, href), mimetype="image/svg+xml",
                     headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
 @app.post("/voucher")
