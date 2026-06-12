@@ -8,6 +8,7 @@ import Registry from './components/Registry.jsx';
 import Memorial from './components/Memorial.jsx';
 
 import { pickApi, jget, expandCommit, getApi, fmtNum, PAGE_SIZE, COMMIT_BATCH } from './api.js';
+import { usePayRespects } from './hooks/usePayRespects.js';
 
 const DEMO = [
   { tokenId: 42, died: 'Mar 02, 2026', pixelCount: 490, commitId: 'demo' },
@@ -20,6 +21,7 @@ const DEMO = [
 
 export default function App() {
   const { address, isConnected } = useAccount();
+  const { payRespects: doPayRespects } = usePayRespects();
 
   const [stats, setStats] = useState({ dead: '—', alive: '—', points: '—' });
   const [tokens, setTokens] = useState([]);
@@ -29,6 +31,15 @@ export default function App() {
   const [status, setStatus] = useState('// loading the registry of departures…');
   const [featured, setFeatured] = useState(null);
   const [searchMsg, setSearchMsg] = useState('');
+  const [mintState, setMintState] = useState({
+    inFlight: false,
+    current: 0,
+    total: 0,
+    currentTokenId: null,
+    results: [],
+    error: null,
+    done: false,
+  });
 
   const regRef = useRef({ commitOffset: 0, exhausted: false, tokens: [] });
   const bootedRef = useRef(false);
@@ -61,10 +72,58 @@ export default function App() {
     setLoading(false);
   }
 
-  function payRespects(tokenIds) {
-    const list = tokenIds.map(t => '#' + t).join(', ');
-    setSearchMsg(`pay respects → would mint ${tokenIds.length} memorial(s) for ${list} — contract integration pending`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  async function payRespects(tokenIds) {
+    if (!Array.isArray(tokenIds) || tokenIds.length === 0) return;
+    if (!isConnected || !address) {
+      setMintState({
+        inFlight: false, current: 0, total: 0, currentTokenId: null,
+        results: [], error: 'connect your wallet to pay respects', done: true,
+      });
+      return;
+    }
+
+    const total = tokenIds.length;
+    const results = [];
+    setMintState({
+      inFlight: true, current: 0, total, currentTokenId: null,
+      results: [], error: null, done: false,
+    });
+
+    for (let i = 0; i < tokenIds.length; i++) {
+      const id = Number(tokenIds[i]);
+      setMintState(s => ({ ...s, current: i + 1, currentTokenId: id, results: [...results] }));
+      try {
+        const { hash, phase } = await doPayRespects({ normieId: id, burnerAddress: address });
+        results.push({ tokenId: id, status: 'success', hash, phase });
+      } catch (err) {
+        const msg = err?.shortMessage || err?.message || String(err);
+        results.push({ tokenId: id, status: 'failed', error: msg });
+        const remaining = tokenIds.length - i - 1;
+        if (remaining > 0) {
+          const cont = window.confirm(
+            `pay respects for #${id} failed:\n${msg}\n\ncontinue with the remaining ${remaining}?`
+          );
+          if (!cont) {
+            setMintState({
+              inFlight: false, current: i + 1, total, currentTokenId: id,
+              results: [...results], error: msg, done: true, aborted: true,
+            });
+            return;
+          }
+        } else {
+          setMintState({
+            inFlight: false, current: i + 1, total, currentTokenId: id,
+            results: [...results], error: msg, done: true,
+          });
+          return;
+        }
+      }
+    }
+
+    setMintState({
+      inFlight: false, current: total, total, currentTokenId: null,
+      results, error: null, done: true,
+    });
   }
 
   function handleFeatured(token, scroll) {
@@ -96,8 +155,7 @@ export default function App() {
         setLoading(false);
         const reg = regRef.current;
         if (reg.tokens[0]) setFeatured(reg.tokens[0]);
-        const api = getApi();
-        setStatus(`// registry of departures &mdash; live via ${api.includes('142.93') || api.includes('yourdomain') ? 'vps cache' : 'direct api'}, ${fmtNum(dead)} burned &middot; newest first`);
+        setStatus(`// registry of departures &mdash; live, ${fmtNum(dead)} burned &middot; newest first`);
       } catch (err) {
         console.warn('Falling back to demo mode:', err);
         const demoTokens = DEMO.slice().reverse();
@@ -109,7 +167,7 @@ export default function App() {
         setLoading(false);
         setFeatured(demoTokens[0]);
         setStats({ dead: '1,897', alive: '8,103', points: '14,205' });
-        setStatus('// DEMO MODE &mdash; placeholder data (API unreachable from the browser; a VPS cache proxy fixes this in production)');
+        setStatus('// DEMO MODE &mdash; placeholder data (backend unreachable)');
       }
     })();
   }, []);
@@ -124,7 +182,11 @@ export default function App() {
         setSearchMsg={setSearchMsg}
       />
       {isConnected && address && (
-        <MineSection address={address} onPayRespects={payRespects} />
+        <MineSection
+          address={address}
+          onPayRespects={payRespects}
+          mintState={mintState}
+        />
       )}
       <Registry
         status={status}
@@ -136,9 +198,13 @@ export default function App() {
         onNext={() => goToPage(page + 1)}
         onSelect={handleFeatured}
       />
-      <Memorial token={featured} onMint={(t) => payRespects([t.tokenId])} />
+      <Memorial
+        token={featured}
+        onMint={(t) => payRespects([t.tokenId])}
+        mintState={mintState}
+      />
       <footer>
-        <span>normituary &middot; on-chain data via api.normies.art &middot; CC0</span>
+        <span>normituary &middot; on-chain data &middot; CC0</span>
         <span>built by the community</span>
       </footer>
     </div>

@@ -1,7 +1,5 @@
-const API_CANDIDATES = [
-  'http://142.93.51.73:8080',
-  'https://api.normies.art',
-];
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
+const API_CANDIDATES = [`${BACKEND_URL}/api`];
 
 export const PAGE_SIZE = 12;
 export const COMMIT_BATCH = 20;
