@@ -161,7 +161,7 @@ def face_fallback(seed):
     return on
 
 def memorial_svg(token_id, portrait_href=None):
-    PX, POX, POY = 360, 320, 178
+    PX, POX, POY = 520, 240, 180
     if portrait_href:
         portrait = (f'<image href="{portrait_href}" x="{POX}" y="{POY}" width="{PX}" height="{PX}" '
                     f'image-rendering="pixelated" preserveAspectRatio="xMidYMid meet"/>')
