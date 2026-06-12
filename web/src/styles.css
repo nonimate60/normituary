@@ -38,16 +38,16 @@ a{color:var(--ink)}
 }
 .bat{
   position:absolute;left:0;top:0;
-  width:28px;height:16px;
+  width:36px;height:22px;
   background:none;border:0;padding:0;
   background-repeat:no-repeat;background-size:contain;background-position:center;
   pointer-events:auto;cursor:inherit;
   image-rendering:pixelated;
-  opacity:.55;
+  opacity:.7;
   will-change:transform;
 }
-.bat:hover{opacity:.85}
-.bat.dead{opacity:.4;transition:opacity .25s}
+.bat:hover{opacity:.95}
+.bat.dead{opacity:.5;transition:opacity .25s}
 
 /* ---------- audio player button ---------- */
 .audio-btn{

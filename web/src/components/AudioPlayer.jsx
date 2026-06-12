@@ -15,9 +15,26 @@ export default function AudioPlayer() {
     const onErr = () => setAvailable(false);
     a.addEventListener('ended', onEnd);
     a.addEventListener('error', onErr);
+
+    a.volume = 0.5;
+    let unlock = null;
+    a.play().then(() => setPlaying(true)).catch(() => {
+      unlock = () => {
+        a.play().then(() => setPlaying(true)).catch(() => {});
+        document.removeEventListener('pointerdown', unlock);
+        document.removeEventListener('keydown', unlock);
+      };
+      document.addEventListener('pointerdown', unlock, { once: true });
+      document.addEventListener('keydown', unlock, { once: true });
+    });
+
     return () => {
       a.removeEventListener('ended', onEnd);
       a.removeEventListener('error', onErr);
+      if (unlock) {
+        document.removeEventListener('pointerdown', unlock);
+        document.removeEventListener('keydown', unlock);
+      }
     };
   }, []);
 
@@ -37,7 +54,7 @@ export default function AudioPlayer() {
 
   return (
     <>
-      <audio ref={audioRef} src={TRACK} loop preload="none" />
+      <audio ref={audioRef} src={TRACK} loop preload="auto" />
       <button
         type="button"
         className={`audio-btn${playing ? ' playing' : ''}`}
