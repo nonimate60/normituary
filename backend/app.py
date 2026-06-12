@@ -247,9 +247,13 @@ def metadata(token_id):
 @app.get("/memorial/<int:token_id>/image.svg")
 def image(token_id):
     if not 0 <= token_id <= 9999: abort(404)
-    rec  = burn_record(token_id)
-    date = time.strftime("%Y-%m-%d", time.gmtime(rec["timestamp"]))
-    href = burned_portrait_datauri(token_id)  # retorna None se falhar
+    try:
+        rec  = burn_record(token_id)
+        date = time.strftime("%Y-%m-%d", time.gmtime(rec["timestamp"]))
+    except Exception:
+        # NormiesAPI indisponível — renderiza lápide sem data real
+        date = "????-??-??"
+    href = burned_portrait_datauri(token_id)
     return Response(memorial_svg(token_id, date, href), mimetype="image/svg+xml",
                     headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
