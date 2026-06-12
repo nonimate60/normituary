@@ -110,10 +110,10 @@ h1{font-family:var(--font-title);font-size:clamp(28px,5vw,44px);font-weight:700;
 }
 .intro{
   max-width:640px;margin:28px auto 0;
-  display:flex;align-items:flex-start;gap:24px;text-align:left;
+  display:flex;align-items:stretch;gap:24px;text-align:left;
 }
 .intro-logo{
-  flex:none;width:64px;height:64px;color:var(--ink);
+  flex:none;width:auto;height:100%;color:var(--ink);
 }
 .intro-copy{
   font-size:13px;color:var(--ink-soft);
