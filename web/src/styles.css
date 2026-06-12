@@ -83,7 +83,7 @@ h1{font-family:var(--font-title);font-size:clamp(28px,5vw,44px);font-weight:700;
   gap:16px;flex-wrap:wrap;
 }
 .grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+  display:grid;grid-template-columns:repeat(3,1fr);
   gap:1px;background:var(--ink-faint);border:1px solid var(--ink-faint);
   min-height:120px;
 }

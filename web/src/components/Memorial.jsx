@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useAccount } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { Portrait } from '../portraits.jsx';
 
 const TX_BASE = 'https://sepolia.etherscan.io/tx/';
@@ -47,8 +49,16 @@ function mintStatusFor(token, mintState) {
 }
 
 export default function Memorial({ token, onMint, mintState }) {
+  const { isConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
   const status = mintStatusFor(token, mintState);
   const disabled = mintState?.inFlight;
+
+  function handleMint() {
+    if (!token) return;
+    if (!isConnected) { openConnectModal?.(); return; }
+    onMint(token);
+  }
 
   return (
     <section className="memorial" id="memorial">
@@ -82,7 +92,7 @@ export default function Memorial({ token, onMint, mintState }) {
         <button
           className="mint-btn"
           disabled={disabled}
-          onClick={() => token && onMint(token)}
+          onClick={handleMint}
         >
           {disabled && status?.kind === 'loading' ? 'paying respects…' : 'pay respects'}
         </button>
