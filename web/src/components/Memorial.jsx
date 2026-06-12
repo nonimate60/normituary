@@ -1,9 +1,34 @@
+import { useEffect, useState } from 'react';
 import { Portrait } from '../portraits.jsx';
 
 const TX_BASE = 'https://sepolia.etherscan.io/tx/';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
 function shortHash(h) {
   return h ? `${h.slice(0, 8)}…${h.slice(-6)}` : '';
+}
+
+function MemorialStone({ tokenId }) {
+  const [svg, setSvg] = useState(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSvg(null);
+    setFailed(false);
+    fetch(`${BACKEND_URL}/memorial/${tokenId}/image.svg`)
+      .then(r => {
+        if (!r.ok) throw new Error(`${r.status}`);
+        return r.text();
+      })
+      .then(text => { if (!cancelled) setSvg(text); })
+      .catch(() => { if (!cancelled) setFailed(true); });
+    return () => { cancelled = true; };
+  }, [tokenId]);
+
+  if (failed) return <Portrait tokenId={tokenId} />;
+  if (!svg) return <div className="memorial-stone-placeholder" />;
+  return <div className="memorial-stone" dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
 function mintStatusFor(token, mintState) {
@@ -28,7 +53,7 @@ export default function Memorial({ token, onMint, mintState }) {
   return (
     <section className="memorial" id="memorial">
       <div className="portrait-side">
-        {token && <Portrait tokenId={token.tokenId} />}
+        {token && <MemorialStone tokenId={token.tokenId} />}
       </div>
       <div className="info">
         <h2>{token ? `Remember Normie #${token.tokenId}` : 'Remember Normie'}</h2>
