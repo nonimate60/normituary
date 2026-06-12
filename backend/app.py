@@ -137,7 +137,7 @@ def stone_speckles(token_id):
         y = 160 + int(rnd() * 670)
         w = 10 if rnd() > .8 else 6
         out.append(f'<rect x="{x}" y="{y}" width="{w}" height="6"/>')
-    return f'<g fill="{INK}" fill-opacity=".10" shape-rendering="crispEdges">{"".join(out)}</g>'
+    return f'<g fill="{INK}" fill-opacity=".08" shape-rendering="crispEdges">{"".join(out)}</g>'
 
 def face_fallback(seed):
     s = seed + 1
@@ -161,7 +161,7 @@ def face_fallback(seed):
     return on
 
 def memorial_svg(token_id, portrait_href=None):
-    PX, POX, POY = 520, 240, 180
+    PX, POX, POY = 520, 240, 230
     if portrait_href:
         portrait = (f'<image href="{portrait_href}" x="{POX}" y="{POY}" width="{PX}" height="{PX}" '
                     f'image-rendering="pixelated" preserveAspectRatio="xMidYMid meet"/>')
@@ -181,10 +181,10 @@ def memorial_svg(token_id, portrait_href=None):
   </g>
   <path d="{headstone_path()}" fill="{INK}" fill-opacity=".14" stroke="{INK}" stroke-width="14" shape-rendering="crispEdges"/>
   <path d="{headstone_inner_path()}" fill="{PAPER}" stroke="{INK}" stroke-opacity=".35" stroke-width="8" shape-rendering="crispEdges"/>
-  {stone_speckles(token_id)}
   <rect x="172" y="868" width="656" height="34" fill="{PAPER}" stroke="{INK}" stroke-width="12" shape-rendering="crispEdges"/>
   <rect x="140" y="896" width="720" height="64" fill="{PAPER}" stroke="{INK}" stroke-width="14" shape-rendering="crispEdges"/>
   {portrait}
+  {stone_speckles(token_id)}
 </svg>'''
 
 # ----------------------------------------------------------------------
