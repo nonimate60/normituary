@@ -116,7 +116,7 @@ h1{font-family:var(--font-title);font-size:clamp(28px,5vw,44px);font-weight:700;
   flex:none;width:120px;display:flex;align-items:center;justify-content:center;
 }
 .intro-logo{
-  width:100%;height:auto;color:var(--ink);
+  width:100%;height:auto;image-rendering:pixelated;display:block;
 }
 .intro-copy{
   flex:1;min-width:0;font-size:13px;color:var(--ink-soft);

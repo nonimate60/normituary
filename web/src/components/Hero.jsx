@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { jget, fmtDate, getApi } from '../api.js';
-import Logo from './Logo.jsx';
 
 export default function Hero({ stats, onFeatured, searchMsg, setSearchMsg }) {
   const [value, setValue] = useState('');
@@ -57,7 +56,7 @@ export default function Hero({ stats, onFeatured, searchMsg, setSearchMsg }) {
       <div className="search-msg">{searchMsg}</div>
       <div className="intro">
         <div className="intro-logo-wrap">
-          <Logo className="intro-logo" />
+          <img className="intro-logo" src="/logo.png" alt="normituary" />
         </div>
         <div className="intro-copy">
           <p>When a Normie is burned, it leaves the collection. Its portrait,
