@@ -1,7 +1,9 @@
+console.log('BACKEND_URL raw:', import.meta.env.VITE_BACKEND_URL);
+
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 const API = `${BACKEND_URL}/api`;
 
-console.log('[normituary] API base:', API);
+console.log('API base:', API);
 
 export const PAGE_SIZE = 12;
 export const COMMIT_BATCH = 20;
