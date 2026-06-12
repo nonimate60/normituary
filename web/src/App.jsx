@@ -187,6 +187,11 @@ export default function App() {
           mintState={mintState}
         />
       )}
+      <Memorial
+        token={featured}
+        onMint={(t) => payRespects([t.tokenId])}
+        mintState={mintState}
+      />
       <Registry
         status={status}
         page={page}
@@ -196,11 +201,6 @@ export default function App() {
         onPrev={() => goToPage(page - 1)}
         onNext={() => goToPage(page + 1)}
         onSelect={handleFeatured}
-      />
-      <Memorial
-        token={featured}
-        onMint={(t) => payRespects([t.tokenId])}
-        mintState={mintState}
       />
       <footer>
         <span>normituary &middot; on-chain data &middot; CC0</span>
