@@ -97,8 +97,15 @@ def burn_record(token_id):
 def burned_portrait_datauri(token_id):
     f = CACHE / f"burned-{token_id}.svg"
     if not f.exists():
-        f.write_text(api_fetch(f"/history/burned/{token_id}/image.svg", as_text=True))
-    return "data:image/svg+xml;base64," + base64.b64encode(f.read_bytes()).decode()
+        try:
+            svg_text = api_fetch(f"/history/burned/{token_id}/image.svg", as_text=True)
+            f.write_text(svg_text)
+        except Exception:
+            return None   # deixa href=None, usa fallback procedural
+    try:
+        return "data:image/svg+xml;base64," + base64.b64encode(f.read_bytes()).decode()
+    except Exception:
+        return None
 
 # ----------------------------------------------------------------------
 # SVG renderer — frozen design, LCG-identical to the site generator
@@ -242,10 +249,7 @@ def image(token_id):
     if not 0 <= token_id <= 9999: abort(404)
     rec  = burn_record(token_id)
     date = time.strftime("%Y-%m-%d", time.gmtime(rec["timestamp"]))
-    try:
-        href = burned_portrait_datauri(token_id)
-    except Exception:
-        href = None
+    href = burned_portrait_datauri(token_id)  # retorna None se falhar
     return Response(memorial_svg(token_id, date, href), mimetype="image/svg+xml",
                     headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
