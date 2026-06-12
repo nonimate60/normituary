@@ -7,7 +7,7 @@ import MineSection from './components/MineSection.jsx';
 import Registry from './components/Registry.jsx';
 import Memorial from './components/Memorial.jsx';
 
-import { pickApi, jget, expandCommit, getApi, fmtNum, PAGE_SIZE, COMMIT_BATCH } from './api.js';
+import { jget, expandCommit, getApi, fmtNum, PAGE_SIZE, COMMIT_BATCH } from './api.js';
 import { usePayRespects } from './hooks/usePayRespects.js';
 
 const DEMO = [
@@ -142,7 +142,6 @@ export default function App() {
 
     (async () => {
       try {
-        await pickApi();
         const s = await jget(`${getApi()}/history/stats`);
         const dead = Number(s.totalBurnedTokens);
         setStats({
