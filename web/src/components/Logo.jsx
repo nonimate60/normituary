@@ -1,7 +1,8 @@
-export default function Logo({ className }) {
+export default function Logo({ className, style }) {
   return (
     <svg
       className={className}
+      style={style}
       viewBox="0 0 100 100"
       xmlns="http://www.w3.org/2000/svg"
       shape-rendering="crispEdges"

@@ -1,9 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { jget, fmtDate, getApi } from '../api.js';
 import Logo from './Logo.jsx';
 
 export default function Hero({ stats, onFeatured, searchMsg, setSearchMsg }) {
   const [value, setValue] = useState('');
+  const copyRef = useRef(null);
+  const [logoSize, setLogoSize] = useState(null);
+
+  useEffect(() => {
+    const el = copyRef.current;
+    if (!el) return;
+    const update = () => setLogoSize(el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   async function search() {
     const raw = value.trim();
@@ -56,8 +68,11 @@ export default function Hero({ stats, onFeatured, searchMsg, setSearchMsg }) {
       </div>
       <div className="search-msg">{searchMsg}</div>
       <div className="intro">
-        <Logo className="intro-logo" />
-        <div className="intro-copy">
+        <Logo
+          className="intro-logo"
+          style={logoSize ? { width: logoSize, height: logoSize } : undefined}
+        />
+        <div className="intro-copy" ref={copyRef}>
           <p>When a Normie is burned, it leaves the collection. Its portrait,
              however, is written into SSTORE2 and remains on-chain forever.
              normituary preserves that record.</p>
