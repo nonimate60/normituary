@@ -46,7 +46,7 @@ contract Normituary is ERC721, EIP712, Ownable {
     uint256 public mourningPrice = 0;
 
     /// @notice Public mint price after mourning ends
-    uint256 public publicPrice = 0.01 ether;
+    uint256 public publicPrice = 0.02 ether;
 
     /// @notice Treasury address — receives all public mint proceeds
     address payable public constant TREASURY =
