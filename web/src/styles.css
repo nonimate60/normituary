@@ -244,8 +244,7 @@ h1{font-family:var(--font-title);font-size:clamp(28px,5vw,44px);font-weight:700;
 /* ---------- deflationary ---------- */
 .deflationary{margin-top:24px}
 .deflationary-body{
-  border:1px solid var(--ink-faint);
-  padding:32px 36px;
+  padding:8px 0 0;
   font-size:13px;color:var(--ink-soft);
   max-width:720px;
 }
