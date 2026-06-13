@@ -11,15 +11,11 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
  * @notice Memorial NFTs for Normies burned via NormiesCanvas.
  *
  * Hybrid model:
- *  - MOURNING PERIOD (30 days per Normie): only the original burner
- *    may mint the memorial, for free (gas only) at any time.
- *  - AFTER MOURNING: open public mint at full price.
+ *  - The original burner may always mint for free, at any time.
+ *  - Public mint opens after a 30-day mourning period, at full price.
  *
  * Each Normie's mourning starts at max(burnTimestamp, launchTime),
  * ensuring pre-launch burners still receive their full 30-day window.
- *
- * The original burner may always mint for free, even after mourning ends.
- * Public mint opens after the 30-day mourning period.
  * First to call wins — the memorialized mapping prevents double-mint.
  *
  * Proof of death: EIP-712 voucher signed by the backend oracle, which
@@ -125,7 +121,7 @@ contract Normituary is ERC721, EIP712, Ownable {
     }
 
     // ---------------------------------------------------------------
-    // Mint
+    // Mint — burner
     // ---------------------------------------------------------------
 
     /**
@@ -142,6 +138,31 @@ contract Normituary is ERC721, EIP712, Ownable {
 
         _memorialize(v, true);
     }
+
+    /**
+     * @notice Batch mint as the original burner — many memorials in a single transaction.
+     * @dev Every voucher must belong to msg.sender. Reverts entirely if any item is invalid.
+     *      msg.value must cover mourningPrice * number of vouchers (0 when mourningPrice is 0).
+     */
+    function mintBatchAsMourner(DeathVoucher[] calldata vs, bytes[] calldata sigs)
+        external
+        payable
+    {
+        uint256 n = vs.length;
+        require(n == sigs.length, "Normituary: length mismatch");
+        require(n > 0, "Normituary: empty batch");
+        require(msg.value >= mourningPrice * n, "Normituary: insufficient payment");
+
+        for (uint256 i = 0; i < n; i++) {
+            _verifyVoucher(vs[i], sigs[i]);
+            require(msg.sender == vs[i].burner, "Normituary: mint reserved for the original burner");
+            _memorialize(vs[i], true);
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // Mint — public
+    // ---------------------------------------------------------------
 
     /**
      * @notice Public mint — open to anyone after mourning ends.
@@ -161,6 +182,10 @@ contract Normituary is ERC721, EIP712, Ownable {
         (bool ok, ) = TREASURY.call{value: msg.value}("");
         require(ok, "Normituary: treasury transfer failed");
     }
+
+    // ---------------------------------------------------------------
+    // Internal
+    // ---------------------------------------------------------------
 
     function _memorialize(DeathVoucher calldata v, bool duringMourning) internal {
         require(!memorialized[v.normieId], "Normituary: memorial already exists");
