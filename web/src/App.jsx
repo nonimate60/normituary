@@ -7,6 +7,7 @@ import MineSection from './components/MineSection.jsx';
 import Registry from './components/Registry.jsx';
 import Memorial from './components/Memorial.jsx';
 import Bats from './components/Bats.jsx';
+import Deflationary from './components/Deflationary.jsx';
 
 import { jget, expandCommit, getApi, fmtNum, PAGE_SIZE, COMMIT_BATCH } from './api.js';
 import { usePayRespects } from './hooks/usePayRespects.js';
@@ -204,6 +205,7 @@ export default function App() {
         onNext={() => goToPage(page + 1)}
         onSelect={handleFeatured}
       />
+      <Deflationary />
       <footer>
         <span>normituary &middot; on-chain data &middot; CC0</span>
         <span>built by the community</span>
