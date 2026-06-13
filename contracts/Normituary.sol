@@ -12,11 +12,15 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
  *
  * Hybrid model:
  *  - MOURNING PERIOD (30 days per Normie): only the original burner
- *    may mint the memorial, for free (gas only) or at a symbolic price.
+ *    may mint the memorial, for free (gas only) at any time.
  *  - AFTER MOURNING: open public mint at full price.
  *
  * Each Normie's mourning starts at max(burnTimestamp, launchTime),
  * ensuring pre-launch burners still receive their full 30-day window.
+ *
+ * The original burner may always mint for free, even after mourning ends.
+ * Public mint opens after the 30-day mourning period.
+ * First to call wins — the memorialized mapping prevents double-mint.
  *
  * Proof of death: EIP-712 voucher signed by the backend oracle, which
  * verifies the burn via NormiesAPI before signing:
@@ -42,7 +46,7 @@ contract Normituary is ERC721, EIP712, Ownable {
     /// @notice Voucher signer (backend oracle)
     address public signer;
 
-    /// @notice Mint price during mourning (burner only). Can be 0.
+    /// @notice Mint price for the original burner. Can be 0.
     uint256 public mourningPrice = 0;
 
     /// @notice Public mint price after mourning ends
@@ -125,7 +129,7 @@ contract Normituary is ERC721, EIP712, Ownable {
     // ---------------------------------------------------------------
 
     /**
-     * @notice Mint during mourning — exclusive to the original burner.
+     * @notice Mint as the original burner — free at any time, even after mourning ends.
      * @dev The voucher proves who burned and when. msg.sender must be the burner.
      */
     function mintAsMourner(DeathVoucher calldata v, bytes calldata sig)
@@ -133,8 +137,7 @@ contract Normituary is ERC721, EIP712, Ownable {
         payable
     {
         _verifyVoucher(v, sig);
-        require(msg.sender == v.burner, "Normituary: mourning mint is exclusive to the burner");
-        require(inMourning(v.burnTimestamp), "Normituary: mourning period ended, use public mint");
+        require(msg.sender == v.burner, "Normituary: mint reserved for the original burner");
         require(msg.value >= mourningPrice, "Normituary: insufficient payment");
 
         _memorialize(v, true);
@@ -142,6 +145,7 @@ contract Normituary is ERC721, EIP712, Ownable {
 
     /**
      * @notice Public mint — open to anyone after mourning ends.
+     * @dev Proceeds are forwarded directly to the project treasury.
      */
     function mintPublic(DeathVoucher calldata v, bytes calldata sig)
         external
