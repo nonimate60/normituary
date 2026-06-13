@@ -12,7 +12,7 @@ export default function Deflationary() {
           &ldquo;every Remembrance funds the next departure&rdquo;
         </blockquote>
         <p>
-          Every public Remembrance minted at 0.01 ETH flows directly to the
+          Every public Remembrance minted at 0.02 ETH flows directly to the
           normituary treasury:{' '}
           <a
             className="treasury-addr"

@@ -86,7 +86,7 @@ export default function Memorial({ token, onMint, mintState }) {
           </div>
           <div className="phase">
             <span>open remembrance</span>
-            <span>public &middot; 0.01 ETH</span>
+            <span>public &middot; 0.02 ETH</span>
           </div>
         </div>
         <button

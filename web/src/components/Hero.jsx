@@ -65,9 +65,14 @@ export default function Hero({ stats, onFeatured, searchMsg, setSearchMsg }) {
           <p>Every departed Normie enters a 30-day mourning period. During that
              window, the original burner may claim a free Remembrance: a
              certificate of passage, minted in their name. After 30 days, the
-             Remembrance opens to anyone for 0.01 ETH.</p>
+             Remembrance opens to anyone for 0.02 ETH.</p>
           <p>For the first 30 days after launch, all previously burned Normies
              are in mourning.</p>
+          <p>
+            <a href="#deflationary" className="intro-link">
+              All proceeds go to the rebuy/reburn deflationary concept of the normituary.
+            </a>
+          </p>
         </div>
       </div>
     </header>

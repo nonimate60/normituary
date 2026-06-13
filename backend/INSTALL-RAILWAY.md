@@ -130,7 +130,7 @@ Liga `payRespects(tokenId)` nos botões individual e selected
 2. pay respects num Normie queimado:
    - se sua wallet É a queimadora e está em luto → mintAsMourner, grátis
    - se NÃO é → backend responde 403 com mourningEndsAt (comportamento certo)
-   - pós-luto → mintPublic 0.01 ETH (lembrete: logo após o deploy TODOS
+   - pós-luto → mintPublic 0.02 ETH (lembrete: logo após o deploy TODOS
      estão em luto, pois conta max(burn, launchTime) + 30d)
 3. Confirma a tx → sepolia.etherscan.io → Transactions do contrato
 4. testnets.opensea.io → contrato → a lápide renderizando no marketplace

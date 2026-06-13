@@ -45,7 +45,7 @@ contract Normituary is ERC721, EIP712, Ownable {
     uint256 public mourningPrice = 0;
 
     /// @notice Preco do mint publico pos-luto
-    uint256 public publicPrice = 0.01 ether;
+    uint256 public publicPrice = 0.02 ether;
 
     /// @notice Base URI do renderer de memoriais (backend / IPFS)
     string private _baseTokenURI;
