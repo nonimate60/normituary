@@ -251,7 +251,6 @@ h1{font-family:var(--font-title);font-size:clamp(28px,5vw,44px);font-weight:700;
 .deflationary-body p + p{margin-top:14px}
 .deflationary-quote{
   font-family:var(--font-title);
-  font-style:italic;
   font-size:20px;
   color:var(--ink);
   margin:8px auto 28px;
