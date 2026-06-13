@@ -70,7 +70,7 @@ export default function Hero({ stats, onFeatured, searchMsg, setSearchMsg }) {
              are in mourning.</p>
           <p>
             <a href="#deflationary" className="intro-link">
-              All proceeds go to the rebuy/reburn deflationary concept of the normituary.
+              All proceeds go to the rebuy &amp; burn deflationary concept of the normituary.
             </a>
           </p>
         </div>
