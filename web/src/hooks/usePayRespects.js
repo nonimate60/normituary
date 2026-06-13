@@ -6,7 +6,7 @@ import { normituaryAbi } from '../lib/normituaryAbi.js';
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 const NORMITUARY_ADDRESS = import.meta.env.VITE_NORMITUARY_ADDRESS;
 const CHAIN_ID = Number(import.meta.env.VITE_CHAIN_ID || 11155111);
-const PUBLIC_PRICE = parseEther('0.01');
+const PUBLIC_PRICE = parseEther('0.02');
 
 export function usePayRespects() {
   const { writeContractAsync } = useWriteContract();

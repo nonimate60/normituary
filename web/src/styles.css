@@ -122,6 +122,11 @@ h1{font-family:var(--font-title);font-size:clamp(28px,5vw,44px);font-weight:700;
   flex:1;min-width:0;font-size:13px;color:var(--ink-soft);
 }
 .intro-copy p + p{margin-top:14px}
+.intro-link{
+  color:var(--ink);text-decoration:none;
+  border-bottom:1px solid var(--ink-faint);
+}
+.intro-link:hover{border-bottom-color:var(--ink)}
 @media(max-width:560px){
   .intro{flex-direction:column;align-items:center;text-align:center}
   .intro-logo-wrap{width:80px}

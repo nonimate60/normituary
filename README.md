@@ -22,7 +22,7 @@ you can mint.
 - **Remembrance NFT** (contract included, deployment pending) — hybrid mint:
   - *Mourning period*: 30 days per Normie (from burn or project launch,
     whichever is later). Burner only. Free.
-  - *Open remembrance*: after mourning, public mint at 0.01 ETH.
+  - *Open remembrance*: after mourning, public mint at 0.02 ETH.
   - One memorial per departed Normie; memorial tokenId = Normie tokenId.
 
 ## Repo layout
