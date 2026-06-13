@@ -8,23 +8,24 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /**
  * @title Normituary — Remembrance
- * @notice Memorial NFTs para Normies queimados via NormiesCanvas.
+ * @notice Memorial NFTs for Normies burned via NormiesCanvas.
  *
- * Modelo hibrido:
- *  - PERIODO DE LUTO (30 dias por Normie): apenas quem queimou o Normie
- *    pode mintar o memorial, gratis (so gas) ou a preco simbolico.
- *  - APOS O LUTO: mint aberto ao publico, preco cheio.
+ * Hybrid model:
+ *  - MOURNING PERIOD (30 days per Normie): only the original burner
+ *    may mint the memorial, for free (gas only) or at a symbolic price.
+ *  - AFTER MOURNING: open public mint at full price.
  *
- * O luto de cada Normie comeca em max(timestampDoBurn, launchTime),
- * garantindo que queimadores antigos (pre-lancamento) tenham seus 30 dias.
+ * Each Normie's mourning starts at max(burnTimestamp, launchTime),
+ * ensuring pre-launch burners still receive their full 30-day window.
  *
- * Prova de morte: voucher EIP-712 assinado pelo backend (oraculo), que
- * verifica o burn via Ponder/NormiesAPI antes de assinar:
- *   - normieId foi de fato queimado (commit revelado, nao expirado)
- *   - burner = owner do burn commitment
- *   - burnTimestamp = timestamp on-chain do commit
+ * Proof of death: EIP-712 voucher signed by the backend oracle, which
+ * verifies the burn via NormiesAPI before signing:
+ *   - normieId was actually burned (commitment revealed, not expired)
+ *   - burner = owner of the burn commitment on NormiesCanvas
+ *   - burnTimestamp = on-chain timestamp of the commitment
  *
- * O tokenId do memorial = normieId do Normie morto (1 memorial por morto).
+ * The memorial tokenId equals the normieId of the departed Normie
+ * (one memorial per departed).
  */
 contract Normituary is ERC721, EIP712, Ownable {
     using ECDSA for bytes32;
@@ -33,31 +34,35 @@ contract Normituary is ERC721, EIP712, Ownable {
     // Config
     // ---------------------------------------------------------------
 
-    uint256 public constant LUTO = 30 days;
+    uint256 public constant MOURNING_PERIOD = 30 days;
 
-    /// @notice Inicio do projeto — base do luto para burns retroativos
+    /// @notice Project launch time — mourning baseline for retroactive burns
     uint256 public immutable launchTime;
 
-    /// @notice Assinante dos vouchers (backend no VPS)
+    /// @notice Voucher signer (backend oracle)
     address public signer;
 
-    /// @notice Preco durante o luto (queimador). Pode ser 0.
+    /// @notice Mint price during mourning (burner only). Can be 0.
     uint256 public mourningPrice = 0;
 
-    /// @notice Preco do mint publico pos-luto
+    /// @notice Public mint price after mourning ends
     uint256 public publicPrice = 0.01 ether;
 
-    /// @notice Base URI do renderer de memoriais (backend / IPFS)
+    /// @notice Treasury address — receives all public mint proceeds
+    address payable public constant TREASURY =
+        payable(0xcaFE2E35cA942c6e4B81713b9C893aB546ac9BA4);
+
+    /// @notice Base URI for the memorial renderer (backend / IPFS)
     string private _baseTokenURI;
 
     // ---------------------------------------------------------------
-    // Estado
+    // State
     // ---------------------------------------------------------------
 
-    /// @notice normieId => ja memorializado
+    /// @notice normieId => already memorialized
     mapping(uint256 => bool) public memorialized;
 
-    /// @notice normieId => timestamp da morte (gravado no mint, p/ tokenURI/consulta)
+    /// @notice normieId => death timestamp (recorded at mint, for tokenURI / queries)
     mapping(uint256 => uint256) public deathOf;
 
     uint256 public totalMinted;
@@ -71,14 +76,14 @@ contract Normituary is ERC721, EIP712, Ownable {
     );
 
     struct DeathVoucher {
-        uint256 normieId;      // token queimado (0-9999)
-        address burner;        // owner do burn commitment no NormiesCanvas
-        uint256 burnTimestamp; // timestamp on-chain do burn
-        uint256 deadline;      // validade do voucher
+        uint256 normieId;      // burned token id (0-9999)
+        address burner;        // owner of the burn commitment on NormiesCanvas
+        uint256 burnTimestamp; // on-chain timestamp of the burn
+        uint256 deadline;      // voucher expiry
     }
 
     // ---------------------------------------------------------------
-    // Eventos
+    // Events
     // ---------------------------------------------------------------
 
     event MemorialMinted(
@@ -101,16 +106,16 @@ contract Normituary is ERC721, EIP712, Ownable {
     }
 
     // ---------------------------------------------------------------
-    // Luto
+    // Mourning
     // ---------------------------------------------------------------
 
-    /// @notice Fim do periodo de luto de um Normie morto
+    /// @notice Returns the timestamp when a departed Normie's mourning period ends
     function mourningEnd(uint256 burnTimestamp) public view returns (uint256) {
         uint256 base = burnTimestamp > launchTime ? burnTimestamp : launchTime;
-        return base + LUTO;
+        return base + MOURNING_PERIOD;
     }
 
-    /// @notice True se o Normie ainda esta em periodo de luto
+    /// @notice Returns true if the Normie is still in its mourning period
     function inMourning(uint256 burnTimestamp) public view returns (bool) {
         return block.timestamp < mourningEnd(burnTimestamp);
     }
@@ -120,48 +125,48 @@ contract Normituary is ERC721, EIP712, Ownable {
     // ---------------------------------------------------------------
 
     /**
-     * @notice Mint durante o luto — exclusivo do queimador.
-     * @dev O voucher prova quem queimou e quando. msg.sender deve ser o burner.
+     * @notice Mint during mourning — exclusive to the original burner.
+     * @dev The voucher proves who burned and when. msg.sender must be the burner.
      */
     function mintAsMourner(DeathVoucher calldata v, bytes calldata sig)
         external
         payable
     {
         _verifyVoucher(v, sig);
-        require(msg.sender == v.burner, "Normituary: luto e so de quem queimou");
-        require(inMourning(v.burnTimestamp), "Normituary: luto encerrado, use mint publico");
-        require(msg.value >= mourningPrice, "Normituary: valor insuficiente");
+        require(msg.sender == v.burner, "Normituary: mourning mint is exclusive to the burner");
+        require(inMourning(v.burnTimestamp), "Normituary: mourning period ended, use public mint");
+        require(msg.value >= mourningPrice, "Normituary: insufficient payment");
 
         _memorialize(v, true);
     }
 
     /**
-     * @notice Mint publico — qualquer um, apos o fim do luto.
+     * @notice Public mint — open to anyone after mourning ends.
      */
     function mintPublic(DeathVoucher calldata v, bytes calldata sig)
         external
         payable
     {
         _verifyVoucher(v, sig);
-        require(!inMourning(v.burnTimestamp), "Normituary: ainda em periodo de luto");
-        require(msg.value >= publicPrice, "Normituary: valor insuficiente");
+        require(!inMourning(v.burnTimestamp), "Normituary: still in mourning period");
+        require(msg.value >= publicPrice, "Normituary: insufficient payment");
 
         _memorialize(v, false);
 
-        // ETH vai direto pro tesouro do projeto
-        (bool ok, ) = payable(0xcaFE2E35cA942c6e4B81713b9C893aB546ac9BA4).call{value: msg.value}("");
-        require(ok, "Normituary: falha ao transferir para o tesouro");
+        // Forward ETH directly to the project treasury
+        (bool ok, ) = TREASURY.call{value: msg.value}("");
+        require(ok, "Normituary: treasury transfer failed");
     }
 
     function _memorialize(DeathVoucher calldata v, bool duringMourning) internal {
-        require(!memorialized[v.normieId], "Normituary: memorial ja existe");
-        require(v.normieId < 10000, "Normituary: id invalido");
+        require(!memorialized[v.normieId], "Normituary: memorial already exists");
+        require(v.normieId < 10000, "Normituary: invalid normie id");
 
         memorialized[v.normieId] = true;
         deathOf[v.normieId] = v.burnTimestamp;
         totalMinted++;
 
-        // tokenId do memorial = id do Normie morto
+        // memorial tokenId = departed Normie id
         _safeMint(msg.sender, v.normieId);
 
         emit MemorialMinted(v.normieId, msg.sender, duringMourning, v.burnTimestamp);
@@ -171,7 +176,7 @@ contract Normituary is ERC721, EIP712, Ownable {
         internal
         view
     {
-        require(block.timestamp <= v.deadline, "Normituary: voucher expirado");
+        require(block.timestamp <= v.deadline, "Normituary: voucher expired");
 
         bytes32 digest = _hashTypedDataV4(
             keccak256(abi.encode(
@@ -182,7 +187,7 @@ contract Normituary is ERC721, EIP712, Ownable {
                 v.deadline
             ))
         );
-        require(digest.recover(sig) == signer, "Normituary: assinatura invalida");
+        require(digest.recover(sig) == signer, "Normituary: invalid signature");
     }
 
     // ---------------------------------------------------------------
@@ -204,7 +209,7 @@ contract Normituary is ERC721, EIP712, Ownable {
 
     function withdraw() external onlyOwner {
         (bool ok, ) = msg.sender.call{value: address(this).balance}("");
-        require(ok, "Normituary: withdraw falhou");
+        require(ok, "Normituary: withdraw failed");
     }
 
     function _baseURI() internal view override returns (string memory) {
