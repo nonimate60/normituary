@@ -147,6 +147,10 @@ contract Normituary is ERC721, EIP712, Ownable {
         require(msg.value >= publicPrice, "Normituary: valor insuficiente");
 
         _memorialize(v, false);
+
+        // ETH vai direto pro tesouro do projeto
+        (bool ok, ) = payable(0xcaFE2E35cA942c6e4B81713b9C893aB546ac9BA4).call{value: msg.value}("");
+        require(ok, "Normituary: falha ao transferir para o tesouro");
     }
 
     function _memorialize(DeathVoucher calldata v, bool duringMourning) internal {
