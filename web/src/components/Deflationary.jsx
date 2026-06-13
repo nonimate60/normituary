@@ -8,6 +8,9 @@ export default function Deflationary() {
         <span>treasury &middot; on-chain</span>
       </div>
       <div className="deflationary-body">
+        <blockquote className="deflationary-quote">
+          &ldquo;every Remembrance funds the next departure&rdquo;
+        </blockquote>
         <p>
           Every public Remembrance minted at 0.01 ETH flows directly to the
           normituary treasury:{' '}
