@@ -96,7 +96,7 @@ contract Normituary is ERC721, EIP712, Ownable {
     // ---------------------------------------------------------------
 
     constructor(address _signer, string memory baseURI_)
-        ERC721("Normituary Remembrance", "RIP")
+        ERC721("Normituary", "RIP")
         EIP712("Normituary", "1")
         Ownable(msg.sender)
     {
