@@ -198,18 +198,13 @@ def health():
 @app.get("/memorial/<int:token_id>")
 def metadata(token_id):
     if not 0 <= token_id <= 9999: abort(404)
-    rec  = burn_record(token_id)
-    date = time.strftime("%Y-%m-%d", time.gmtime(rec["timestamp"]))
     return jsonify({
-        "name": f"Remembrance \u2014 Normie #{token_id:04d}",
-        "description": (f"In memory of Normie #{token_id:04d}, burned on {date}. "
-                        "Its portrait remains written into SSTORE2 \u2014 on-chain, forever."),
+        "name": f"Remembrance Normie #{token_id:04d}",
+        "description": (f"In memory of Normie #{token_id:04d}. "
+                        "Its portrait remains written into SSTORE2; on-chain, forever."),
         "image": f"{PUBLIC_BASE}/memorial/{token_id}/image.svg",
         "attributes": [
-            {"trait_type": "Normie",          "value": token_id},
-            {"trait_type": "Burned On",       "value": date},
-            {"trait_type": "Pixel Count",     "value": rec["pixelCount"]},
-            {"trait_type": "Burn Commitment", "value": str(rec["commitId"])},
+            {"trait_type": "Normie", "value": token_id}
         ],
     })
 
