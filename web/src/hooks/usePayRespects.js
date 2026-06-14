@@ -62,9 +62,10 @@ export function usePayRespects() {
     return hash;
   }
 
-  async function mintBatchMourner(vouchers) {
+  async function mintBatchMourner(vouchers, onSubStage) {
     const tuples = vouchers.map(v => voucherTuple(v.voucher));
     const sigs = vouchers.map(v => v.signature);
+    onSubStage?.('signing');
     const hash = await writeContractAsync({
       address: NORMITUARY_ADDRESS,
       abi: normituaryAbi,
@@ -74,6 +75,7 @@ export function usePayRespects() {
       chainId: CHAIN_ID,
     });
     setTxHash(hash);
+    onSubStage?.('mining', hash);
     const r = await publicClient.waitForTransactionReceipt({ hash });
     if (r.status !== 'success') {
       throw new Error(`batch transaction reverted (${hash})`);
@@ -109,13 +111,22 @@ export function usePayRespects() {
       const pub = valid.filter(v => v.phase === 'public');
 
       if (mourning.length >= 2) {
-        onProgress?.({ stage: 'batch-tx', count: mourning.length });
         try {
-          const hash = await mintBatchMourner(mourning);
-          mourning.forEach(v => results.push({ tokenId: v.id, status: 'success', hash, phase: 'mourning' }));
+          const hash = await mintBatchMourner(mourning, (sub, h) => {
+            if (sub === 'signing') {
+              onProgress?.({ stage: 'batch-signing', count: mourning.length });
+            } else {
+              onProgress?.({ stage: 'batch-mining', count: mourning.length, hash: h });
+            }
+          });
+          mourning.forEach(v => results.push({
+            tokenId: v.id, status: 'success', hash, phase: 'mourning', batched: true,
+          }));
         } catch (err) {
           const msg = err?.shortMessage || err?.message || String(err);
-          mourning.forEach(v => results.push({ tokenId: v.id, status: 'failed', error: msg }));
+          mourning.forEach(v => results.push({
+            tokenId: v.id, status: 'failed', error: msg, atomicRevert: true,
+          }));
         }
       } else if (mourning.length === 1) {
         const v = mourning[0];

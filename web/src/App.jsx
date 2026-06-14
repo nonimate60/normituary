@@ -87,7 +87,7 @@ export default function App() {
     const total = tokenIds.length;
     setMintState({
       inFlight: true, current: 0, total, currentTokenId: null,
-      results: [], error: null, done: false,
+      results: [], error: null, done: false, stage: null, batchCount: 0,
     });
 
     try {
@@ -96,11 +96,11 @@ export default function App() {
         burnerAddress: address,
         onProgress: ({ stage, tokenId, count }) => {
           if (stage === 'fetching-vouchers') {
-            setMintState(s => ({ ...s, currentTokenId: null, current: 0 }));
-          } else if (stage === 'batch-tx') {
-            setMintState(s => ({ ...s, currentTokenId: null, current: count }));
+            setMintState(s => ({ ...s, stage, currentTokenId: null, current: 0 }));
+          } else if (stage === 'batch-signing' || stage === 'batch-mining') {
+            setMintState(s => ({ ...s, stage, currentTokenId: null, batchCount: count, current: count }));
           } else if (stage === 'single-tx') {
-            setMintState(s => ({ ...s, currentTokenId: tokenId, current: s.current + 1 }));
+            setMintState(s => ({ ...s, stage, currentTokenId: tokenId, current: s.current + 1 }));
           }
         },
       });
@@ -108,13 +108,13 @@ export default function App() {
       const error = validCount === 0 ? 'no memorials available to claim' : null;
       setMintState({
         inFlight: false, current: total, total, currentTokenId: null,
-        results, error, done: true,
+        results, error, done: true, stage: 'done', batchCount: 0,
       });
     } catch (err) {
       const msg = err?.shortMessage || err?.message || String(err);
       setMintState({
         inFlight: false, current: 0, total, currentTokenId: null,
-        results: [], error: msg, done: true,
+        results: [], error: msg, done: true, stage: 'done', batchCount: 0,
       });
     }
   }
