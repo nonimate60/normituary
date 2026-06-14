@@ -40,6 +40,7 @@ export default function Hero({ stats, onFeatured, searchMsg, setSearchMsg }) {
       <p className="sub">in memory of the burned Normies &mdash; on-chain, forever</p>
       <div className="stats">
         <div className="stat"><b>{stats.dead}</b>departed</div>
+        <div className="stat remembered"><b>{stats.remembered}</b>remembered</div>
         <div className="stat"><b>{stats.alive}</b>remain</div>
         <div className="stat"><b>{stats.points}</b>points bequeathed</div>
       </div>

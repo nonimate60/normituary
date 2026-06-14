@@ -84,6 +84,8 @@ h1{font-family:var(--font-title);font-size:clamp(28px,5vw,44px);font-weight:700;
 .stat{padding:14px 32px;font-size:12px;color:var(--ink-soft)}
 .stat + .stat{border-left:1px solid var(--ink-faint)}
 .stat b{display:block;color:var(--ink);font-size:22px;font-weight:700}
+.stat.remembered{background:var(--ink);color:rgba(255,255,255,.78)}
+.stat.remembered b{color:#fff}
 
 /* ---------- search ---------- */
 .search-row{
