@@ -28,6 +28,18 @@ body{
   -webkit-font-smoothing:antialiased;
   overflow-x:hidden;
 }
+
+/* ---------- cemetery footer background ---------- */
+body::before{
+  content:'';
+  position:fixed;
+  bottom:0;left:0;right:0;
+  height:min(40vh, 400px);
+  background:url('/cemetery-bg.svg') no-repeat bottom center / cover;
+  opacity:0.12;
+  pointer-events:none;
+  z-index:-1;
+}
 .wrap{max-width:960px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
 a{color:var(--ink)}
 
