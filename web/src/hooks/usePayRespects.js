@@ -8,6 +8,31 @@ const NORMITUARY_ADDRESS = import.meta.env.VITE_NORMITUARY_ADDRESS;
 const CHAIN_ID = Number(import.meta.env.VITE_CHAIN_ID || 11155111);
 const PUBLIC_PRICE = parseEther('0.02');
 
+function voucherTuple(v) {
+  return {
+    normieId: BigInt(v.normieId),
+    burner: v.burner,
+    burnTimestamp: BigInt(v.burnTimestamp),
+    deadline: BigInt(v.deadline),
+  };
+}
+
+async function fetchVoucher(normieId, burnerAddress) {
+  const res = await fetch(`${BACKEND_URL}/voucher`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ normieId, address: burnerAddress }),
+  });
+  if (!res.ok) {
+    if (res.status === 403) {
+      throw new Error('still in mourning — only the original burner can mint right now');
+    }
+    const text = await res.text().catch(() => '');
+    throw new Error(`voucher request failed (${res.status})${text ? `: ${text}` : ''}`);
+  }
+  return res.json();
+}
+
 export function usePayRespects() {
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient({ chainId: CHAIN_ID });
@@ -18,53 +43,116 @@ export function usePayRespects() {
 
   const receipt = useWaitForTransactionReceipt({ hash: txHash, chainId: CHAIN_ID });
 
-  async function payRespects({ normieId, burnerAddress }) {
+  async function mintSingle({ voucher, signature, phase: vPhase }) {
+    const fnName = vPhase === 'public' ? 'mintPublic' : 'mintAsMourner';
+    const value = vPhase === 'public' ? PUBLIC_PRICE : 0n;
+    const hash = await writeContractAsync({
+      address: NORMITUARY_ADDRESS,
+      abi: normituaryAbi,
+      functionName: fnName,
+      args: [voucherTuple(voucher), signature],
+      value,
+      chainId: CHAIN_ID,
+    });
+    setTxHash(hash);
+    const r = await publicClient.waitForTransactionReceipt({ hash });
+    if (r.status !== 'success') {
+      throw new Error(`transaction reverted (${hash})`);
+    }
+    return hash;
+  }
+
+  async function mintBatchMourner(vouchers, onSubStage) {
+    const tuples = vouchers.map(v => voucherTuple(v.voucher));
+    const sigs = vouchers.map(v => v.signature);
+    onSubStage?.('signing');
+    const hash = await writeContractAsync({
+      address: NORMITUARY_ADDRESS,
+      abi: normituaryAbi,
+      functionName: 'mintBatchAsMourner',
+      args: [tuples, sigs],
+      value: 0n,
+      chainId: CHAIN_ID,
+    });
+    setTxHash(hash);
+    onSubStage?.('mining', hash);
+    const r = await publicClient.waitForTransactionReceipt({ hash });
+    if (r.status !== 'success') {
+      throw new Error(`batch transaction reverted (${hash})`);
+    }
+    return hash;
+  }
+
+  async function payRespectsBatch({ normieIds, burnerAddress, onProgress }) {
     setError(null);
     setTxHash(undefined);
     setPhase(null);
     setIsSending(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/voucher`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ normieId, address: burnerAddress }),
-      });
-      if (!res.ok) {
-        if (res.status === 403) {
-          throw new Error('still in mourning — only the original burner can mint right now');
+      onProgress?.({ stage: 'fetching-vouchers', total: normieIds.length });
+
+      const fetched = await Promise.allSettled(
+        normieIds.map(id => fetchVoucher(id, burnerAddress)),
+      );
+
+      const valid = [];
+      const results = [];
+      fetched.forEach((vr, i) => {
+        const id = Number(normieIds[i]);
+        if (vr.status === 'fulfilled') {
+          valid.push({ id, ...vr.value });
+        } else {
+          const msg = vr.reason?.shortMessage || vr.reason?.message || String(vr.reason);
+          results.push({ tokenId: id, status: 'failed', error: msg });
         }
-        const text = await res.text().catch(() => '');
-        throw new Error(`voucher request failed (${res.status})${text ? `: ${text}` : ''}`);
-      }
-      const data = await res.json();
-      const { voucher, signature, phase: phaseFromApi } = data;
-      setPhase(phaseFromApi);
-
-      const fnName = phaseFromApi === 'public' ? 'mintPublic' : 'mintAsMourner';
-      const value = phaseFromApi === 'public' ? PUBLIC_PRICE : 0n;
-
-      const voucherTuple = {
-        normieId: BigInt(voucher.normieId),
-        burner: voucher.burner,
-        burnTimestamp: BigInt(voucher.burnTimestamp),
-        deadline: BigInt(voucher.deadline),
-      };
-
-      const hash = await writeContractAsync({
-        address: NORMITUARY_ADDRESS,
-        abi: normituaryAbi,
-        functionName: fnName,
-        args: [voucherTuple, signature],
-        value,
-        chainId: CHAIN_ID,
       });
-      setTxHash(hash);
 
-      const r = await publicClient.waitForTransactionReceipt({ hash });
-      if (r.status !== 'success') {
-        throw new Error(`transaction reverted (${hash})`);
+      const mourning = valid.filter(v => v.phase !== 'public');
+      const pub = valid.filter(v => v.phase === 'public');
+
+      if (mourning.length >= 2) {
+        try {
+          const hash = await mintBatchMourner(mourning, (sub, h) => {
+            if (sub === 'signing') {
+              onProgress?.({ stage: 'batch-signing', count: mourning.length });
+            } else {
+              onProgress?.({ stage: 'batch-mining', count: mourning.length, hash: h });
+            }
+          });
+          mourning.forEach(v => results.push({
+            tokenId: v.id, status: 'success', hash, phase: 'mourning', batched: true,
+          }));
+        } catch (err) {
+          const msg = err?.shortMessage || err?.message || String(err);
+          mourning.forEach(v => results.push({
+            tokenId: v.id, status: 'failed', error: msg, atomicRevert: true,
+          }));
+        }
+      } else if (mourning.length === 1) {
+        const v = mourning[0];
+        onProgress?.({ stage: 'single-tx', tokenId: v.id, phase: 'mourning' });
+        try {
+          const hash = await mintSingle(v);
+          results.push({ tokenId: v.id, status: 'success', hash, phase: 'mourning' });
+        } catch (err) {
+          const msg = err?.shortMessage || err?.message || String(err);
+          results.push({ tokenId: v.id, status: 'failed', error: msg });
+        }
       }
-      return { hash, phase: phaseFromApi };
+
+      for (const v of pub) {
+        onProgress?.({ stage: 'single-tx', tokenId: v.id, phase: 'public' });
+        try {
+          const hash = await mintSingle(v);
+          results.push({ tokenId: v.id, status: 'success', hash, phase: 'public' });
+        } catch (err) {
+          const msg = err?.shortMessage || err?.message || String(err);
+          results.push({ tokenId: v.id, status: 'failed', error: msg });
+        }
+      }
+
+      onProgress?.({ stage: 'done', results });
+      return { results, validCount: valid.length };
     } catch (err) {
       setError(err);
       throw err;
@@ -74,7 +162,7 @@ export function usePayRespects() {
   }
 
   return {
-    payRespects,
+    payRespectsBatch,
     isLoading: isSending || receipt.isLoading,
     isSuccess: receipt.isSuccess,
     error,

@@ -10,9 +10,23 @@ function shortHash(h) {
 
 function MintBanner({ mintState }) {
   if (!mintState || (mintState.total === 0 && !mintState.error)) return null;
-  const { inFlight, current, total, currentTokenId, results, done, error } = mintState;
+  const { inFlight, current, total, currentTokenId, results, done, error, stage, batchCount } = mintState;
 
   if (inFlight) {
+    if (stage === 'batch-signing') {
+      return (
+        <div className="mine-empty">
+          signing one transaction for {batchCount} memorial{batchCount > 1 ? 's' : ''}…
+        </div>
+      );
+    }
+    if (stage === 'batch-mining') {
+      return (
+        <div className="mine-empty">
+          minting {batchCount} memorial{batchCount > 1 ? 's' : ''} in one tx…
+        </div>
+      );
+    }
     return (
       <div className="mine-empty">
         paying respects {current}/{total}
@@ -24,6 +38,15 @@ function MintBanner({ mintState }) {
   if (done) {
     const successes = results.filter(r => r.status === 'success');
     const failures = results.filter(r => r.status === 'failed');
+    const atomicFailures = failures.filter(r => r.atomicRevert);
+    const individualFailures = failures.filter(r => !r.atomicRevert);
+
+    const successesByHash = new Map();
+    for (const r of successes) {
+      if (!successesByHash.has(r.hash)) successesByHash.set(r.hash, []);
+      successesByHash.get(r.hash).push(r.tokenId);
+    }
+
     return (
       <div className="mine-empty">
         <div>
@@ -31,21 +54,36 @@ function MintBanner({ mintState }) {
           {failures.length > 0 && <> &middot; {failures.length} failed</>}
           {error && total === 0 && <>: {error}</>}
         </div>
-        {successes.length > 0 && (
+        {successesByHash.size > 0 && (
           <div style={{ marginTop: 6 }}>
-            {successes.map(r => (
-              <span key={r.hash} style={{ marginRight: 12 }}>
-                #{r.tokenId}{' '}
-                <a href={`${TX_BASE}${r.hash}`} target="_blank" rel="noreferrer">
-                  {shortHash(r.hash)}
-                </a>
-              </span>
+            {[...successesByHash.entries()].map(([hash, ids]) => (
+              ids.length > 1 ? (
+                <div key={hash}>
+                  {ids.length} memorials paid respects in one tx &mdash;{' '}
+                  <a href={`${TX_BASE}${hash}`} target="_blank" rel="noreferrer">
+                    view on etherscan
+                  </a>
+                </div>
+              ) : (
+                <span key={hash} style={{ marginRight: 12 }}>
+                  #{ids[0]}{' '}
+                  <a href={`${TX_BASE}${hash}`} target="_blank" rel="noreferrer">
+                    {shortHash(hash)}
+                  </a>
+                </span>
+              )
             ))}
           </div>
         )}
-        {failures.length > 0 && (
+        {atomicFailures.length > 0 && (
           <div style={{ marginTop: 6 }}>
-            {failures.map(r => (
+            {atomicFailures.length} memorials failed together: someone else claimed one in the meantime.
+            {' '}Try again &mdash; the conflict will clear from the list.
+          </div>
+        )}
+        {individualFailures.length > 0 && (
+          <div style={{ marginTop: 6 }}>
+            {individualFailures.map(r => (
               <div key={`${r.tokenId}-${r.error}`}>
                 #{r.tokenId} &mdash; {r.error}
               </div>
@@ -131,7 +169,9 @@ export default function MineSection({ address, onPayRespects, mintState }) {
             onClick={() => onPayRespects([...selected])}
           >
             {minting
-              ? `paying respects ${mintState.current}/${mintState.total}…`
+              ? (mintState.stage === 'batch-signing' || mintState.stage === 'batch-mining')
+                ? `minting ${mintState.batchCount} in one tx…`
+                : `paying respects ${mintState.current}/${mintState.total}…`
               : `pay respects for selected (${n})`}
           </button>
         </span>

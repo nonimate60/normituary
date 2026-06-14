@@ -23,7 +23,7 @@ const DEMO = [
 
 export default function App() {
   const { address, isConnected } = useAccount();
-  const { payRespects: doPayRespects } = usePayRespects();
+  const { payRespectsBatch } = usePayRespects();
 
   const [stats, setStats] = useState({ dead: '—', alive: '—', points: '—' });
   const [tokens, setTokens] = useState([]);
@@ -85,47 +85,38 @@ export default function App() {
     }
 
     const total = tokenIds.length;
-    const results = [];
     setMintState({
       inFlight: true, current: 0, total, currentTokenId: null,
-      results: [], error: null, done: false,
+      results: [], error: null, done: false, stage: null, batchCount: 0,
     });
 
-    for (let i = 0; i < tokenIds.length; i++) {
-      const id = Number(tokenIds[i]);
-      setMintState(s => ({ ...s, current: i + 1, currentTokenId: id, results: [...results] }));
-      try {
-        const { hash, phase } = await doPayRespects({ normieId: id, burnerAddress: address });
-        results.push({ tokenId: id, status: 'success', hash, phase });
-      } catch (err) {
-        const msg = err?.shortMessage || err?.message || String(err);
-        results.push({ tokenId: id, status: 'failed', error: msg });
-        const remaining = tokenIds.length - i - 1;
-        if (remaining > 0) {
-          const cont = window.confirm(
-            `pay respects for #${id} failed:\n${msg}\n\ncontinue with the remaining ${remaining}?`
-          );
-          if (!cont) {
-            setMintState({
-              inFlight: false, current: i + 1, total, currentTokenId: id,
-              results: [...results], error: msg, done: true, aborted: true,
-            });
-            return;
+    try {
+      const { results, validCount } = await payRespectsBatch({
+        normieIds: tokenIds,
+        burnerAddress: address,
+        onProgress: ({ stage, tokenId, count }) => {
+          if (stage === 'fetching-vouchers') {
+            setMintState(s => ({ ...s, stage, currentTokenId: null, current: 0 }));
+          } else if (stage === 'batch-signing' || stage === 'batch-mining') {
+            setMintState(s => ({ ...s, stage, currentTokenId: null, batchCount: count, current: count }));
+          } else if (stage === 'single-tx') {
+            setMintState(s => ({ ...s, stage, currentTokenId: tokenId, current: s.current + 1 }));
           }
-        } else {
-          setMintState({
-            inFlight: false, current: i + 1, total, currentTokenId: id,
-            results: [...results], error: msg, done: true,
-          });
-          return;
-        }
-      }
-    }
+        },
+      });
 
-    setMintState({
-      inFlight: false, current: total, total, currentTokenId: null,
-      results, error: null, done: true,
-    });
+      const error = validCount === 0 ? 'no memorials available to claim' : null;
+      setMintState({
+        inFlight: false, current: total, total, currentTokenId: null,
+        results, error, done: true, stage: 'done', batchCount: 0,
+      });
+    } catch (err) {
+      const msg = err?.shortMessage || err?.message || String(err);
+      setMintState({
+        inFlight: false, current: 0, total, currentTokenId: null,
+        results: [], error: msg, done: true, stage: 'done', batchCount: 0,
+      });
+    }
   }
 
   function handleFeatured(token, scroll) {

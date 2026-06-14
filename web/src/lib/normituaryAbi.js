@@ -18,6 +18,16 @@ export const normituaryAbi = [
   },
   {
     type: 'function',
+    name: 'mintBatchAsMourner',
+    stateMutability: 'payable',
+    inputs: [
+      { name: 'vs', type: 'tuple[]', components: deathVoucherComponents },
+      { name: 'sigs', type: 'bytes[]' },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'function',
     name: 'mintPublic',
     stateMutability: 'payable',
     inputs: [
