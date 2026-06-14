@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useReadContract } from 'wagmi';
 
 import Nav from './components/Nav.jsx';
 import Hero from './components/Hero.jsx';
@@ -11,6 +11,10 @@ import Deflationary from './components/Deflationary.jsx';
 
 import { jget, expandCommit, getApi, fmtNum, PAGE_SIZE, COMMIT_BATCH } from './api.js';
 import { usePayRespects } from './hooks/usePayRespects.js';
+import { normituaryAbi } from './lib/normituaryAbi.js';
+
+const NORMITUARY_ADDRESS = import.meta.env.VITE_NORMITUARY_ADDRESS;
+const CHAIN_ID = Number(import.meta.env.VITE_CHAIN_ID || 11155111);
 
 const DEMO = [
   { tokenId: 42, died: 'Mar 02, 2026', pixelCount: 490, commitId: 'demo' },
@@ -25,7 +29,19 @@ export default function App() {
   const { address, isConnected } = useAccount();
   const { payRespectsBatch } = usePayRespects();
 
-  const [stats, setStats] = useState({ dead: '—', alive: '—', points: '—' });
+  const [stats, setStats] = useState({ dead: '—', alive: '—', points: '—', remembered: '0' });
+
+  const { data: totalMinted } = useReadContract({
+    address: NORMITUARY_ADDRESS,
+    abi: normituaryAbi,
+    functionName: 'totalMinted',
+    chainId: CHAIN_ID,
+    query: { enabled: !!NORMITUARY_ADDRESS, refetchInterval: 30000 },
+  });
+
+  useEffect(() => {
+    setStats(s => ({ ...s, remembered: fmtNum(Number(totalMinted ?? 0)) }));
+  }, [totalMinted]);
   const [tokens, setTokens] = useState([]);
   const [page, setPage] = useState(0);
   const [exhausted, setExhausted] = useState(false);
